@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 
 # --- 1. Modelo Cliente ---
 class Cliente(models.Model):
@@ -80,15 +81,18 @@ class Factura(models.Model):
         Calcula la base imponible a partir de las líneas de factura,
         y luego el IVA, IRPF y el total de la factura.
         """
-        # Suma la base imponible de todas las líneas asociadas
-        # El related_name 'lineas' está configurado en LineaFactura
         self.base_imponible = sum(linea.importe_linea for linea in self.lineas.all())
 
-        self.importe_iva = self.base_imponible * (self.porcentaje_iva / 100)
-        self.importe_irpf = self.base_imponible * (self.porcentaje_irpf / 100)
+        porcentaje_iva_decimal = Decimal(str(self.porcentaje_iva))
+        porcentaje_irpf_decimal = Decimal(str(self.porcentaje_irpf))
         
-        # El IRPF es una retención, por lo que se resta del total
+        # Esta es la línea que está causando el problema.
+        # Elimina el '' al final.
+        self.importe_iva = self.base_imponible * (porcentaje_iva_decimal / Decimal(100)) # ELIMINAR EL 
+        self.importe_irpf = self.base_imponible * (porcentaje_irpf_decimal / Decimal(100))
+        
         self.total_factura = self.base_imponible + self.importe_iva - self.importe_irpf
+
 
     def save(self, *args, **kwargs):
         """

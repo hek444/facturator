@@ -9,3 +9,6 @@ __pycache__
 *.log
 *.pot
 *.mo
+data/*
+src/core/management/commands/parse_invoices.py
+.DS_Store
