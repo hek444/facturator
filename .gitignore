@@ -1,0 +1,11 @@
+.env
+docker_volume/*
+*.pyc
+__pycache__
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.pot
+*.mo
