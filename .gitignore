@@ -1,5 +1,5 @@
 .env
-docker_volume/*
+docker_volumes/*
 *.pyc
 __pycache__
 *.pyo

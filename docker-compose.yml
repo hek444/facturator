@@ -1,0 +1,24 @@
+services:
+  app:
+    build: . 
+    image: hek444/sistems:facturator
+    container_name: django-facturator
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    env_file: .env
+    command: tail -f /dev/null
+
+  mysql:
+    image: mysql:8.0.32
+    ports:
+      - 33061:3306
+    environment:
+      - MYSQL_DATABASE=facturador
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=mypass
+      - MYSQL_ROOT_PASSWORD=Q2w3e4r5T
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - ./docker_volumes/mysql:/var/lib/mysql
