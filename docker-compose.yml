@@ -14,11 +14,6 @@ services:
     image: mysql:8.0.32
     ports:
       - 33061:3306
-    environment:
-      - MYSQL_DATABASE=facturador
-      - MYSQL_USER=myuser
-      - MYSQL_PASSWORD=mypass
-      - MYSQL_ROOT_PASSWORD=Q2w3e4r5T
-      - MYSQL_ROOT_HOST=%
+    env_file: .env
     volumes:
       - ./docker_volumes/mysql:/var/lib/mysql
