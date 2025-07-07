@@ -28,6 +28,9 @@ cd /app && python src/manage.py runserver 0:8000
 
 Accede a la aplicación en [http://localhost:8000](http://localhost:8000) desde tu navegador.
 
+### /backoffice es el listado de facturas para pasar a pdf
+### /admin para crear proveedores, clientes y facturas con sus lineas de factura
+
 ## Estructura del proyecto
 
 - `src/` - Código fuente de la aplicación
