@@ -1,5 +1,6 @@
 from django.db import models
 from decimal import Decimal
+from django.conf import settings
 
 
 class Cliente(models.Model):
@@ -22,6 +23,7 @@ class Cliente(models.Model):
 
 
 class Proveedor(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='proveedor_profile', null=True, blank=True)
     nombre = models.CharField(max_length=200, help_text="Nombre o Razón Social del Proveedor")
     cif_nif = models.CharField(max_length=20, unique=True, verbose_name="CIF/NIF")
     direccion = models.TextField(blank=True, null=True)

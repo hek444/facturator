@@ -5,9 +5,23 @@ from django.http import HttpResponse
 from weasyprint import HTML, CSS
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-
+from datetime import date
+from django.urls import reverse
+from django.views.generic.base import RedirectView
 
 from core.models import Factura
+
+
+class HomeRedirectView(RedirectView):
+    """
+    Redirige desde la página de inicio (raíz) a la lista de facturas
+    del año en curso.
+    """
+    permanent = False 
+
+    def get_redirect_url(self, *args, **kwargs):
+        current_year = date.today().year
+        return reverse('backoffice:factura_list_by_year', kwargs={'year': current_year})
 
 
 class FacturaListView(LoginRequiredMixin, ListView):
@@ -20,12 +34,24 @@ class FacturaListView(LoginRequiredMixin, ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        # ... (esta parte ya está bien)
-        queryset = super().get_queryset().order_by('-fecha_emision')
+        """
+        Este método ahora filtra las facturas basándose en el tipo de usuario
+        y el año seleccionado.
+        """
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Factura.objects.all()
+        else:
+            try:
+                queryset = Factura.objects.filter(proveedor=user.proveedor_profile)
+            except AttributeError:
+                queryset = Factura.objects.none()
+
         year = self.kwargs.get('year')
         if year:
             queryset = queryset.filter(fecha_emision__year=year)
-        return queryset
+
+        return queryset.order_by('-fecha_emision')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

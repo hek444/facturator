@@ -43,7 +43,7 @@
                     <td>{{ factura.numero_factura }}</td>
                     <td>{{ factura.proveedor.nombre }}</td>
                     <td>{{ factura.cliente.nombre }}</td>
-                    <td>{{ factura.fecha_emision|date:"d/m/Y" }}</td>
+                    <td>{{ factura.fecha_emision|date:"j \d\e F \d\e Y" }}</td>
                     <td>{{ factura.total_factura|floatformat:2 }} €</td>
                     <td><span class="badge bg-success">{{ factura.get_estado_display }}</span></td>
                     <td class="text-center">
