@@ -1,7 +1,7 @@
 from django.db import models
 from decimal import Decimal
 
-# --- 1. Modelo Cliente ---
+
 class Cliente(models.Model):
     nombre = models.CharField(max_length=200, help_text="Nombre o Razón Social del Cliente")
     cif_nif = models.CharField(max_length=20, unique=True, verbose_name="CIF/NIF")
@@ -15,12 +15,12 @@ class Cliente(models.Model):
     class Meta:
         verbose_name = "Cliente"
         verbose_name_plural = "Clientes"
-        ordering = ['nombre'] # Ordenar alfabéticamente por nombre
+        ordering = ['nombre']
 
     def __str__(self):
         return self.nombre
 
-# --- 2. Modelo Proveedor ---
+
 class Proveedor(models.Model):
     nombre = models.CharField(max_length=200, help_text="Nombre o Razón Social del Proveedor")
     cif_nif = models.CharField(max_length=20, unique=True, verbose_name="CIF/NIF")
@@ -34,12 +34,12 @@ class Proveedor(models.Model):
     class Meta:
         verbose_name = "Proveedor"
         verbose_name_plural = "Proveedores"
-        ordering = ['nombre'] # Ordenar alfabéticamente por nombre
+        ordering = ['nombre']
 
     def __str__(self):
         return self.nombre
 
-# --- 3. Modelo Factura ---
+
 class Factura(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, related_name='facturas_emitidas_a_clientes')
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='facturas_recibidas_de_proveedores')
@@ -47,13 +47,9 @@ class Factura(models.Model):
     numero_factura = models.CharField(max_length=50, unique=True, help_text="Número único de la factura")
     fecha_emision = models.DateField(help_text="Fecha en que la factura fue emitida")
     fecha_vencimiento = models.DateField(blank=True, null=True, help_text="Fecha límite para el pago de la factura")
-
-    # Campos para los cálculos (21% IVA, 15% IRPF)
-    base_imponible = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Base Imponible")
-    
-    # Porcentajes fijos como solicitaste
+    base_imponible = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Base Imponible")    
     porcentaje_iva = models.DecimalField(max_digits=4, decimal_places=2, default=21.00, verbose_name="% IVA")
-    porcentaje_irpf = models.DecimalField(max_digits=4, decimal_places=2, default=15.00, verbose_name="% IRPF") # Asumimos 15% fijo
+    porcentaje_irpf = models.DecimalField(max_digits=4, decimal_places=2, default=15.00, verbose_name="% IRPF")
 
     importe_iva = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Importe IVA")
     importe_irpf = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Importe IRPF")
@@ -70,7 +66,6 @@ class Factura(models.Model):
     class Meta:
         verbose_name = "Factura"
         verbose_name_plural = "Facturas"
-        # Ordenar por fecha de emisión descendente y número de factura
         ordering = ['-fecha_emision', 'numero_factura']
 
     def __str__(self):
@@ -86,11 +81,8 @@ class Factura(models.Model):
         porcentaje_iva_decimal = Decimal(str(self.porcentaje_iva))
         porcentaje_irpf_decimal = Decimal(str(self.porcentaje_irpf))
         
-        # Esta es la línea que está causando el problema.
-        # Elimina el '' al final.
         self.importe_iva = self.base_imponible * (porcentaje_iva_decimal / Decimal(100)) # ELIMINAR EL 
         self.importe_irpf = self.base_imponible * (porcentaje_irpf_decimal / Decimal(100))
-        
         self.total_factura = self.base_imponible + self.importe_iva - self.importe_irpf
 
 
@@ -99,10 +91,9 @@ class Factura(models.Model):
         Sobreescribe el método save para asegurar que los cálculos se realicen
         antes de guardar la instancia de la factura.
         """
-        super().save(*args, **kwargs) # La factura se guarda primero para obtener su PK
+        super().save(*args, **kwargs)
 
 
-# --- 4. Modelo LineaFactura ---
 class LineaFactura(models.Model):
     """
     Representa una línea de detalle dentro de una Factura.
@@ -112,8 +103,6 @@ class LineaFactura(models.Model):
     descripcion = models.CharField(max_length=255, help_text="Descripción del concepto de la línea")
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, help_text="Cantidad de unidades")
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, help_text="Precio por unidad")
-    
-    # Importe calculado para esta línea (cantidad * precio_unitario)
     importe_linea = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Importe Línea")
 
     class Meta:

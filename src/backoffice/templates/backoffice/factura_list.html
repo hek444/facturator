@@ -1,110 +1,89 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Listado de Facturas</title>
-    <meta charset="utf-8">
-    <style>
-        /* CSS básico para el listado, puedes mejorarlo con tu framework CSS (ej. Bootstrap) */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            color: #333;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .btn {
-            display: inline-block;
-            padding: 5px 10px;
-            margin: 2px 0;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .btn-success { background-color: #28a745; }
-        .btn-danger { background-color: #dc3545; }
-        .pagination {
-            margin-top: 20px;
-        }
-        .pagination span {
-            padding: 5px 10px;
-            border: 1px solid #ddd;
-            margin-right: 5px;
-            text-decoration: none;
-            color: #007bff;
-        }
-        .pagination .current {
-            background-color: #007bff;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <h1>Listado de Facturas</h1>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    
+    <h1 class="my-4">
+        Facturas 
+        {% if selected_year %}
+            de {{ selected_year }}
+        {% else %}
+            (Todos los años)
+        {% endif %}
+    </h1>
+
+    <div class="btn-group mb-4" role="group" aria-label="Filtro de años">
+        <a href="{% url 'backoffice:factura_list' %}" class="btn {% if not selected_year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Todos
+        </a>
+        {% for year_date in available_years %}
+            <a href="{% url 'backoffice:factura_list_by_year' year=year_date.year %}" class="btn {% if selected_year == year_date.year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                {{ year_date.year }}
+            </a>
+        {% endfor %}
+    </div>
 
     {% if facturas %}
-    <table>
-        <thead>
-            <tr>
-                <th>Número</th>
-                <th>Proveedor</th>
-                <th>Cliente</th>
-                <th>Fecha Emisión</th>
-                <th>Total Factura</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for factura in facturas %}
-            <tr>
-                <td>{{ factura.numero_factura }}</td>
-                <td>{{ factura.proveedor.nombre }}</td>
-                <td>{{ factura.cliente.nombre }}</td>
-                <td>{{ factura.fecha_emision|date:"d/m/Y" }}</td>
-                <td>{{ factura.total_factura }} €</td>
-                <td>{{ factura.get_estado_display }}</td>
-                <td>
-                    <a href="{% url 'factura_pdf' factura.id %}" class="btn">PDF</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Número</th>
+                    <th scope="col">Proveedor</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Fecha Emisión</th>
+                    <th scope="col">Total Factura</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col" class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factura in facturas %}
+                <tr>
+                    <td>{{ factura.numero_factura }}</td>
+                    <td>{{ factura.proveedor.nombre }}</td>
+                    <td>{{ factura.cliente.nombre }}</td>
+                    <td>{{ factura.fecha_emision|date:"d/m/Y" }}</td>
+                    <td>{{ factura.total_factura|floatformat:2 }} €</td>
+                    <td><span class="badge bg-success">{{ factura.get_estado_display }}</span></td>
+                    <td class="text-center">
+                        <a href="{% url 'backoffice:factura_pdf' factura.id %}" class="btn btn-info btn-sm">PDF</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     {% if is_paginated %}
-    <div class="pagination">
-        {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-        {% endif %}
-        <span class="current">
-            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}.
-        </span>
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
-        {% endif %}
-    </div>
+        <nav aria-label="Navegación de páginas">
+            <ul class="pagination justify-content-center">
+                
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" tabindex="-1" aria-disabled="true">Anterior</a>
+                </li>
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Siguiente</a>
+                </li>
+
+            </ul>
+        </nav>
     {% endif %}
 
     {% else %}
-    <p>No hay facturas registradas.</p>
+    <div class="alert alert-warning mt-4" role="alert">
+      No hay facturas registradas para el año seleccionado.
+    </div>
     {% endif %}
-
-</body>
-</html>
+    
+</div>
+{% endblock %}

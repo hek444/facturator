@@ -12,7 +12,7 @@ class LineaFacturaInline(admin.TabularInline): # O admin.StackedInline si prefie
 @admin.register(Factura)
 class FacturaAdmin(admin.ModelAdmin):
     inlines = [LineaFacturaInline]
-    list_display = ('numero_factura', 'proveedor', 'cliente', 'fecha_emision', 'total_factura', 'estado')
-    list_filter = ('estado', 'proveedor', 'cliente', 'fecha_emision')
+    list_display = ('numero_factura', 'proveedor', 'cliente', 'fecha_emision', 'total_factura', 'importe_iva', 'importe_irpf')
+    # list_filter = ('estado', 'proveedor', 'cliente', 'fecha_emision')
     search_fields = ('numero_factura', 'proveedor__nombre', 'cliente__nombre')
     date_hierarchy = 'fecha_emision'

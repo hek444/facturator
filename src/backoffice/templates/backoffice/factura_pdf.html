@@ -84,27 +84,17 @@
             text-align: right;
             font-weight: bold;
         }
-        .totales-table .total-final {
+        .totales-table .total-final td {
             font-size: 12pt;
             font-weight: bold;
             padding-top: 8px;
             border-top: 1px solid #ddd;
-            /* Quitar el float aquí y usar text-align si las celdas se comportan bien */
-            text-align: left; /* Para el texto "TOTAL FACTURA:" */
         }
-        .totales-table .total-final span { /* Para el valor del total final */
-            float: right; /* Esto debería funcionar bien para el span dentro de td */
-        }
-
-
-        /* Utilidad para limpiar floats */
         .clearfix::after {
             content: "";
             clear: both;
             display: table;
         }
-
-        /* Estilos para el pie de página bancario */
         .footer-bancario {
             margin-top: 50px;
             border-top: 1px solid #eee;
@@ -157,8 +147,8 @@
             <tr>
                 <td>{{ linea.descripcion }}</td>
                 <td>{{ linea.cantidad|floatformat:2 }}</td>
-                <td>{{ linea.precio_unitario|floatformat:2 }}&nbsp;€</td> {# Usar &nbsp; aquí #}
-                <td>{{ linea.importe_linea|floatformat:2 }}&nbsp;€</td> {# Usar &nbsp; aquí #}
+                <td>{{ linea.precio_unitario|floatformat:2 }}&nbsp;€</td>
+                <td>{{ linea.importe_linea|floatformat:2 }}&nbsp;€</td>
             </tr>
             {% empty %}
             <tr>
@@ -173,21 +163,19 @@
             <tbody>
                 <tr>
                     <td class="label">Base Imponible:</td>
-                    <td class="value">{{ factura.base_imponible|floatformat:2 }}&nbsp;€</td> {# Usar &nbsp; aquí #}
+                    <td class="value">{{ factura.base_imponible|floatformat:2 }}&nbsp;€</td>
                 </tr>
                 <tr>
                     <td class="label">IVA ({{ factura.porcentaje_iva|floatformat:"0" }}%):</td>
-                    <td class="value">{{ factura.importe_iva|floatformat:2 }}&nbsp;€</td> {# Usar &nbsp; aquí #}
+                    <td class="value">{{ factura.importe_iva|floatformat:2 }}&nbsp;€</td>
                 </tr>
                 <tr>
                     <td class="label">IRPF ({{ factura.porcentaje_irpf|floatformat:"0" }}%):</td>
-                    <td class="value">- {{ factura.importe_irpf|floatformat:2 }}&nbsp;€</td> {# Usar &nbsp; aquí #}
+                    <td class="value">- {{ factura.importe_irpf|floatformat:2 }}&nbsp;€</td>
                 </tr>
-                <tr>
-                    <td colspan="2" class="total-final">
-                        <span>TOTAL FACTURA:</span>
-                        <span style="float: right;">{{ factura.total_factura|floatformat:2 }}&nbsp;€</span> {# Usar &nbsp; aquí #}
-                    </td>
+                <tr class="total-final">
+                    <td class="label">TOTAL FACTURA:</td>
+                    <td class="value">{{ factura.total_factura|floatformat:2 }}&nbsp;€</td>
                 </tr>
             </tbody>
         </table>
