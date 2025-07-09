@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
 from django.db.models import Sum
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, Extract
 from weasyprint import HTML, CSS
 from datetime import date
 import json
@@ -153,4 +153,48 @@ class FacturacionEvolucionView(LoginRequiredMixin, TemplateView):
         context['chart_data'] = chart_data_points
         context['page_name'] = 'facutra_evolution'
 
+        return context
+
+
+class CalculoIvaTrimestralView(LoginRequiredMixin, TemplateView):
+    template_name = 'backoffice/calculo_iva.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        selected_year = self.kwargs.get('year', date.today().year)
+
+        if user.is_superuser:
+            base_queryset = Factura.objects.all()
+        else:
+            try:
+                base_queryset = Factura.objects.filter(proveedor=user.proveedor_profile)
+            except AttributeError:
+                base_queryset = Factura.objects.none()
+
+        resultados = base_queryset.filter(
+            fecha_emision__year=selected_year
+        ).annotate(
+            trimestre=Extract('fecha_emision', 'quarter')
+        ).values(
+            'trimestre'
+        ).annotate(
+            iva_total=Sum('importe_iva')
+        ).order_by('trimestre')
+
+        resultados_dict = {r['trimestre']: r['iva_total'] for r in resultados}
+        
+        context['resultados_trimestrales'] = [
+            {'trimestre': 1, 'iva_a_pagar': resultados_dict.get(1, 0)},
+            {'trimestre': 2, 'iva_a_pagar': resultados_dict.get(2, 0)},
+            {'trimestre': 3, 'iva_a_pagar': resultados_dict.get(3, 0)},
+            {'trimestre': 4, 'iva_a_pagar': resultados_dict.get(4, 0)},
+        ]
+        
+        context['selected_year'] = selected_year
+        context['available_years'] = base_queryset.dates('fecha_emision', 'year', order='DESC')
+        context['titulo'] = f"Cálculo de IVA Trimestral - Año {selected_year}"
+        context['page_name'] = 'iva_trimestal'
+        
         return context
