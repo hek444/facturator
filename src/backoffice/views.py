@@ -66,7 +66,7 @@ class FacturaListView(LoginRequiredMixin, ListView):
         return context
 
 
-
+@login_required
 def generar_pdf_factura(request, factura_id):
     """
     Vista para generar y descargar la factura en formato PDF.
