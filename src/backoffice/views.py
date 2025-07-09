@@ -1,13 +1,16 @@
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
+from django.views.generic.base import RedirectView
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from weasyprint import HTML, CSS
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from datetime import date
 from django.urls import reverse
-from django.views.generic.base import RedirectView
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
+from weasyprint import HTML, CSS
+from datetime import date
+import json
 
 from core.models import Factura
 
@@ -58,7 +61,7 @@ class FacturaListView(LoginRequiredMixin, ListView):
         
         year_str = self.kwargs.get('year')
         context['selected_year'] = int(year_str) if year_str else None
-        
+        context['page_name'] = 'facutra_list'
         context['available_years'] = Factura.objects.dates('fecha_emision', 'year', order='DESC')
         return context
 
@@ -85,3 +88,43 @@ def login_redirect_view(request):
     """
     current_year = date.today().year
     return redirect('backoffice:factura_list_by_year', year=current_year)
+
+
+class FacturacionEvolucionView(LoginRequiredMixin, TemplateView):
+    """
+    Muestra un gráfico con la evolución de la facturación mensual.
+    """
+    template_name = 'backoffice/facturacion_evolucion.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Factura.objects.all()
+        else:
+            try:
+                queryset = Factura.objects.filter(proveedor=user.proveedor_profile)
+            except AttributeError:
+                queryset = Factura.objects.none()
+        
+        year = self.kwargs.get('year')
+        if year:
+            queryset = queryset.filter(fecha_emision__year=year)
+
+        data = queryset.annotate(month=TruncMonth('fecha_emision')).values('month').annotate(total_facturado=Sum('total_factura')).order_by('month')
+        chart_data_points = [
+            {
+                'x': d['month'].strftime('%Y-%m-%d'),
+                'y': float(d['total_facturado'])
+            }
+            for d in data if d['total_facturado'] is not None
+        ]
+    
+        year_str = self.kwargs.get('year')
+
+        context['selected_year'] = int(year_str) if year_str else None        
+        context['available_years'] = Factura.objects.dates('fecha_emision', 'year', order='DESC')
+        context['chart_data'] = chart_data_points
+        context['page_name'] = 'facutra_evolution'
+
+        return context

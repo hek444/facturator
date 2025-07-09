@@ -88,14 +88,6 @@ class Factura(models.Model):
         self.total_factura = self.base_imponible + self.importe_iva - self.importe_irpf
 
 
-    def save(self, *args, **kwargs):
-        """
-        Sobreescribe el método save para asegurar que los cálculos se realicen
-        antes de guardar la instancia de la factura.
-        """
-        super().save(*args, **kwargs)
-
-
 class LineaFactura(models.Model):
     """
     Representa una línea de detalle dentro de una Factura.

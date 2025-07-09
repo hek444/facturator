@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Evolución de Facturación
+        {% if selected_year %}
+            de {{ selected_year }}
+        {% else %}
+            (Todos los años)
+        {% endif %}
+    </h1>
+
+    <div class="btn-group mb-4" role="group" aria-label="Filtro de años">
+        <a href="{% url 'backoffice:facturacion_evolucion' %}" class="btn {% if not selected_year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Todos
+        </a>
+        {% for year_date in available_years %}
+            <a href="{% url 'backoffice:facturacion_evolucion_by_year' year=year_date.year %}" class="btn {% if selected_year == year_date.year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                {{ year_date.year }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <div style="position: relative; height: 50vh; width: 80vw; margin: auto;">
+        <canvas id="evolucionChart"></canvas>
+    </div>
+
+    {{ chart_data|json_script:"chart-data-points" }}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<script>
+    // 1. Leemos la única lista de puntos {x, y}
+    const dataPoints = JSON.parse(document.getElementById('chart-data-points').textContent);
+
+    // 2. Obtenemos el canvas
+    const ctx = document.getElementById('evolucionChart').getContext('2d');
+
+    // 3. Creamos el gráfico usando un eje de tiempo
+    const evolucionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            // ¡Ya no hay una propiedad 'labels' aquí!
+            datasets: [{
+                label: 'Facturación Total (€)',
+                data: dataPoints, // Le pasamos directamente los puntos {x, y}
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time', // La clave: definimos el eje como de tiempo
+                    time: {
+                        unit: 'month',
+                        displayFormats: {
+                            month: 'MMM yy' // ej: "Ene 25"
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
