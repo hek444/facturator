@@ -1,4 +1,4 @@
-from django.views.generic import ListView, TemplateView
+from django.views.generic import ListView, TemplateView, DetailView
 from django.views.generic.base import RedirectView
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -64,6 +64,32 @@ class FacturaListView(LoginRequiredMixin, ListView):
         context['page_name'] = 'facutra_list'
         context['available_years'] = Factura.objects.dates('fecha_emision', 'year', order='DESC')
         return context
+
+
+class FacturaDetailView(LoginRequiredMixin, DetailView):
+    """
+    Muestra los detalles de una única factura.
+    Respeta los permisos: los superusuarios ven todo, los proveedores solo lo suyo.
+    """
+    model = Factura
+    template_name = 'backoffice/factura_pdf.html'
+    context_object_name = 'factura'
+
+    def get_queryset(self):
+        """
+        Filtra el conjunto de facturas desde el que se buscará la factura.
+        Esto asegura que un usuario no pueda ver facturas de otro proveedor.
+        """
+        qs = super().get_queryset()
+        user = self.request.user
+
+        if user.is_superuser:
+            return qs
+        
+        try:
+            return qs.filter(proveedor=user.proveedor_profile)
+        except AttributeError:
+            return qs.none()
 
 
 @login_required
