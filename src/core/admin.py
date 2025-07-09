@@ -2,6 +2,10 @@ from django.contrib import admin
 from .models import Cliente, Proveedor, Factura, LineaFactura
 
 # Register your models here.
+admin.site.site_header = "Mis Facturas"
+admin.site.site_title = "Portal de Mis Facturas"
+admin.site.index_title = "Portal de facturación"
+
 admin.site.register(Cliente)
 
 
