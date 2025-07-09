@@ -18,14 +18,16 @@
 
 <div class="container">
     
-    <h1 class="my-4">
-        Facturas 
-        {% if selected_year %}
-            de {{ selected_year }}
-        {% else %}
-            (Todos los años)
+    <div class="d-flex justify-content-between align-items-center my-4">
+        
+        <h1>{{ titulo }}</h1>
+
+        {% if show_back_to_iva_button and selected_year %}
+            <a href="{% url 'backoffice:calculo_iva_por_ano' year=selected_year %}" class="btn btn-secondary">
+                &larr; Volver al Resumen de IVA
+            </a>
         {% endif %}
-    </h1>
+    </div>
 
     <div class="btn-group mb-4" role="group" aria-label="Filtro de años">
         <a href="{% url 'backoffice:factura_list' %}" class="btn {% if not selected_year %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
@@ -63,10 +65,10 @@
                     <td>{{ factura.total_factura|floatformat:2 }} €</td>
                     <td><span class="badge bg-success">{{ factura.get_estado_display }}</span></td>
                     <td class="text-center">
-                        <a href="{% url 'backoffice:factura_pdf' factura.id %}" class="btn btn-info btn-sm">PDF</a>
+                        <a href="{% url 'backoffice:factura_pdf' factura.id %}" class="btn btn-outline-info btn-sm">PDF</a>
                     </td>
                     <td class="text-center">
-                        <a href="{% url 'backoffice:factura_detail' factura.id %}" target="_blank" class="btn btn-secondary btn-sm">Ver</a>
+                        <a href="{% url 'backoffice:factura_detail' factura.id %}" target="_blank" class="btn btn-outline-secondary btn-sm">Ver</a>
                     </td>
                 </tr>
                 {% endfor %}

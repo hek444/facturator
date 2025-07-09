@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Factura {{ factura.numero_factura }}</title>
+    <meta charset="utf-8">
+    <style>
+        /* CSS para el diseño de tu factura */
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            margin: 40px; /* Márgenes generales del documento */
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24pt;
+            margin-bottom: 5px;
+        }
+        .info-section { /* Clase unificada para los bloques de información */
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .info-section h2 { /* Eliminados por la discusión previa, pero se pueden añadir si se desea */
+            font-size: 14pt;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .info-section p {
+            margin: 3px 0;
+        }
+
+        /* Estilos para la tabla de líneas de factura */
+        .lineas-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .lineas-table th, .lineas-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top; /* Asegura que el contenido se alinee arriba */
+            white-space: normal; /* Permite que el texto se ajuste si es necesario */
+        }
+        .lineas-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        /* Ajustar anchos de columnas específicos para evitar saltos de línea inesperados */
+        .lineas-table th:nth-child(1), .lineas-table td:nth-child(1) { width: 50%; } /* Descripción */
+        .lineas-table th:nth-child(2), .lineas-table td:nth-child(2) { width: 10%; text-align: center; } /* Cantidad */
+        .lineas-table th:nth-child(3), .lineas-table td:nth-child(3) { width: 20%; text-align: right; white-space: nowrap; } /* Precio Unitario - Importante: nowrap */
+        .lineas-table th:nth-child(4), .lineas-table td:nth-child(4) { width: 20%; text-align: right; white-space: nowrap; } /* Importe - Importante: nowrap */
+
+
+        /* Estilos para la sección de totales */
+        .totales-container {
+            margin-top: 30px;
+            width: 45%;
+            float: right;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .totales-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .totales-table td {
+            border: none;
+            padding: 3px 0;
+            white-space: nowrap; /* Evita que los números y el símbolo se separen aquí también */
+        }
+        .totales-table .label {
+            text-align: left;
+        }
+        .totales-table .value {
+            text-align: right;
+            font-weight: bold;
+        }
+        .totales-table .total-final td {
+            font-size: 12pt;
+            font-weight: bold;
+            padding-top: 8px;
+            border-top: 1px solid #ddd;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        .footer-bancario {
+            margin-top: 50px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            font-size: 9pt;
+            color: #666;
+        }
+        .footer-bancario p {
+            margin: 2px 0;
+        }
+        .footer-bancario strong {
+            white-space: nowrap; /* Asegura que "Cod. Cta. Bancaria:" no se rompa */
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FACTURA</h1>
+        <p>Número: <strong>{{ factura.numero_factura }}</strong></p>
+        <p>Fecha de Emisión: {{ factura.fecha_emision|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="info-section info-emisor">
+        <p><strong>{{ factura.proveedor.nombre }}</strong></p>
+        <p>CIF/NIF: {{ factura.proveedor.cif_nif }}</p>
+        <p>Dirección: {{ factura.proveedor.direccion|default:"" }}, {{ factura.proveedor.codigo_postal|default:"" }} {{ factura.proveedor.ciudad|default:"" }} ({{ factura.proveedor.provincia|default:"" }})</p>
+        <p>Email: {{ factura.proveedor.email|default:"" }}</p>
+        <p>Teléfono: {{ factura.proveedor.telefono|default:"" }}</p>
+    </div>
+
+    <div class="info-section info-receptor">
+        <p><strong>{{ factura.cliente.nombre }}</strong></p>
+        <p>CIF/NIF: {{ factura.cliente.cif_nif }}</p>
+        <p>Dirección: {{ factura.cliente.direccion|default:"" }}, {{ factura.cliente.codigo_postal|default:"" }} {{ factura.cliente.ciudad|default:"" }} ({{ factura.cliente.provincia|default:"" }})</p>
+        <p>Email: {{ factura.cliente.email|default:"" }}</p>
+        <p>Teléfono: {{ factura.cliente.telefono|default:"" }}</p>
+    </div>
+
+    <table class="lineas-table">
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Importe</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for linea in factura.lineas.all %}
+            <tr>
+                <td>{{ linea.descripcion }}</td>
+                <td>{{ linea.cantidad|floatformat:2 }}</td>
+                <td>{{ linea.precio_unitario|floatformat:2 }}&nbsp;€</td>
+                <td>{{ linea.importe_linea|floatformat:2 }}&nbsp;€</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No hay líneas de factura.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totales-container clearfix">
+        <table class="totales-table">
+            <tbody>
+                <tr>
+                    <td class="label">Base Imponible:</td>
+                    <td class="value">{{ factura.base_imponible|floatformat:2 }}&nbsp;€</td>
+                </tr>
+                <tr>
+                    <td class="label">IVA ({{ factura.porcentaje_iva|floatformat:"0" }}%):</td>
+                    <td class="value">{{ factura.importe_iva|floatformat:2 }}&nbsp;€</td>
+                </tr>
+                <tr>
+                    <td class="label">IRPF ({{ factura.porcentaje_irpf|floatformat:"0" }}%):</td>
+                    <td class="value">- {{ factura.importe_irpf|floatformat:2 }}&nbsp;€</td>
+                </tr>
+                <tr class="total-final">
+                    <td class="label">TOTAL FACTURA:</td>
+                    <td class="value">{{ factura.total_factura|floatformat:2 }}&nbsp;€</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p style="clear: both; margin-top: 20px;">Observaciones: 2 {{ factura.observaciones|default:"Sin observaciones." }}</p>
+    <p>Estado: {{ factura.get_estado_display }}</p>
+
+    <div class="footer-bancario">
+        <p><strong>Cod. Cta. Bancaria:</strong> 0182 1008 75 0201515627</p>
+        <p><strong>IBAN:</strong> ES47 0182 1008 7502 0151 5627</p>
+        <p>Pago al contado por transferencia bancaria a la cuenta adjuntada.</p>
+    </div>
+
+</body>
+</html>

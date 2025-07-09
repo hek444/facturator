@@ -7,6 +7,7 @@ app_name = 'backoffice'
 
 urlpatterns = [
     path('factura/<int:pk>/', FacturaDetailView.as_view(), name='factura_detail'),
+    path('facturas/<int:year>/<int:quarter>/', FacturaListView.as_view(), name='factura_list_by_quarter'),
     path('facturas/', FacturaListView.as_view(), name='factura_list'),
     path('facturas/<int:year>/', FacturaListView.as_view(), name='factura_list_by_year'),
     path('evolucion/', FacturacionEvolucionView.as_view(), name='facturacion_evolucion'),

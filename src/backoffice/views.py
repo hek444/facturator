@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth, Extract
@@ -28,9 +29,6 @@ class HomeRedirectView(RedirectView):
 
 
 class FacturaListView(LoginRequiredMixin, ListView):
-    """
-    Vista que muestra un listado de todas las facturas.
-    """
     model = Factura
     template_name = 'backoffice/factura_list.html'
     context_object_name = 'facturas'
@@ -38,8 +36,7 @@ class FacturaListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         """
-        Este método ahora filtra las facturas basándose en el tipo de usuario
-        y el año seleccionado.
+        Filtra las facturas por usuario, y opcionalmente por año y trimestre.
         """
         user = self.request.user
         if user.is_superuser:
@@ -51,41 +48,69 @@ class FacturaListView(LoginRequiredMixin, ListView):
                 queryset = Factura.objects.none()
 
         year = self.kwargs.get('year')
+        quarter = self.kwargs.get('quarter')
+
         if year:
             queryset = queryset.filter(fecha_emision__year=year)
+        if quarter:
+            queryset = queryset.filter(fecha_emision__quarter=quarter)
 
         return queryset.order_by('-fecha_emision')
 
     def get_context_data(self, **kwargs):
+        """
+        Añade variables extra al contexto para usarlas en la plantilla (títulos, etc.).
+        """
         context = super().get_context_data(**kwargs)
+        year = self.kwargs.get('year')
+        quarter = self.kwargs.get('quarter')
+
+        context['selected_year'] = year
+        context['selected_quarter'] = quarter
         
-        year_str = self.kwargs.get('year')
-        context['selected_year'] = int(year_str) if year_str else None
-        context['page_name'] = 'facutra_list'
+        if year and quarter:
+            context['titulo'] = f"Facturas de {year} - Trimestre {quarter}"
+        elif year:
+            context['titulo'] = f"Facturas de {year}"
+        else:
+            context['titulo'] = "Todas las Facturas"
+            
+        if self.request.GET.get('from') == 'iva':
+            context['show_back_to_iva_button'] = True
+
         context['available_years'] = Factura.objects.dates('fecha_emision', 'year', order='DESC')
         return context
 
 
 class FacturaDetailView(LoginRequiredMixin, DetailView):
     """
-    Muestra los detalles de una única factura.
-    Respeta los permisos: los superusuarios ven todo, los proveedores solo lo suyo.
+    Muestra los detalles de una única factura, buscando un template
+    específico para el proveedor antes de usar el de por defecto.
     """
     model = Factura
-    template_name = 'backoffice/factura_pdf.html'
     context_object_name = 'factura'
 
+    def get_template_names(self):
+        """
+        Devuelve una lista de templates a intentar.
+        Django usará el primero que encuentre.
+        """
+        user = self.request.user
+        templates = ['backoffice/factura_pdf.html']
+
+        if not user.is_superuser and hasattr(user, 'proveedor_profile'):
+            provider_id = user.proveedor_profile.id
+            specific_template = f'backoffice/factura_pdf_{provider_id}.html'
+            templates.insert(0, specific_template)
+            
+        return templates
+
     def get_queryset(self):
-        """
-        Filtra el conjunto de facturas desde el que se buscará la factura.
-        Esto asegura que un usuario no pueda ver facturas de otro proveedor.
-        """
         qs = super().get_queryset()
         user = self.request.user
 
         if user.is_superuser:
             return qs
-        
         try:
             return qs.filter(proveedor=user.proveedor_profile)
         except AttributeError:
@@ -95,12 +120,22 @@ class FacturaDetailView(LoginRequiredMixin, DetailView):
 @login_required
 def generar_pdf_factura(request, factura_id):
     """
-    Vista para generar y descargar la factura en formato PDF.
+    Vista para generar y descargar la factura en formato PDF,
+    buscando un template específico para el proveedor.
     """
     factura = get_object_or_404(Factura, pk=factura_id)
-    html_string = render_to_string('backoffice/factura_pdf.html', {'factura': factura})
-    pdf_data = HTML(string=html_string).write_pdf()
+    
+    user = request.user
+    template_names = ['backoffice/factura_pdf.html']
+    
+    if not user.is_superuser and hasattr(user, 'proveedor_profile'):
+        provider_id = user.proveedor_profile.id
+        specific_template = f'backoffice/factura_pdf_{provider_id}.html'
+        template_names.insert(0, specific_template)
 
+    html_string = render_to_string(template_names, {'factura': factura})
+    
+    pdf_data = HTML(string=html_string).write_pdf()
     response = HttpResponse(pdf_data, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="factura_{factura.numero_factura}.pdf"'
     return response
