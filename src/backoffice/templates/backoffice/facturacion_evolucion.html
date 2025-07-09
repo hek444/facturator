@@ -13,11 +13,11 @@
     </h1>
 
     <div class="btn-group mb-4" role="group" aria-label="Filtro de años">
-        <a href="{% url 'backoffice:facturacion_evolucion' %}" class="btn {% if not selected_year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        <a href="{% url 'backoffice:facturacion_evolucion' %}" class="btn {% if not selected_year %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
             Todos
         </a>
         {% for year_date in available_years %}
-            <a href="{% url 'backoffice:facturacion_evolucion_by_year' year=year_date.year %}" class="btn {% if selected_year == year_date.year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <a href="{% url 'backoffice:facturacion_evolucion_by_year' year=year_date.year %}" class="btn {% if selected_year == year_date.year %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
                 {{ year_date.year }}
             </a>
         {% endfor %}

@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<style>
+
+.color_page {
+    color: gray;
+}
+
+.color_page:hover {
+    color: black;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+</style>
+
 <div class="container">
     
     <h1 class="my-4">
@@ -13,11 +28,11 @@
     </h1>
 
     <div class="btn-group mb-4" role="group" aria-label="Filtro de años">
-        <a href="{% url 'backoffice:factura_list' %}" class="btn {% if not selected_year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        <a href="{% url 'backoffice:factura_list' %}" class="btn {% if not selected_year %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
             Todos
         </a>
         {% for year_date in available_years %}
-            <a href="{% url 'backoffice:factura_list_by_year' year=year_date.year %}" class="btn {% if selected_year == year_date.year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <a href="{% url 'backoffice:factura_list_by_year' year=year_date.year %}" class="btn {% if selected_year == year_date.year %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
                 {{ year_date.year }}
             </a>
         {% endfor %}
@@ -64,29 +79,30 @@
             <ul class="pagination justify-content-center">
                 
                 <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-                    <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" tabindex="-1" aria-disabled="true">Anterior</a>
+                    <a class="page-link color_page" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" tabindex="-1" aria-disabled="true">Anterior</a>
                 </li>
                 
                 {% for num in page_obj.paginator.page_range %}
                     {% if page_obj.number == num %}
-                        <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+                        <li class="page-item" aria-current="page">
+                            <span class="page-link bg-secondary border-secondary text-white">{{ num }}</span>
+                        </li>
                     {% else %}
-                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        <li class="page-item"><a class="page-link color_page" href="?page={{ num }}" >{{ num }}</a></li>
                     {% endif %}
                 {% endfor %}
 
                 <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                    <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Siguiente</a>
+                    <a class="page-link color_page" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Siguiente</a>
                 </li>
-
             </ul>
         </nav>
     {% endif %}
 
     {% else %}
-    <div class="alert alert-warning mt-4" role="alert">
-      No hay facturas registradas para el año seleccionado.
-    </div>
+        <div class="alert alert-warning mt-4" role="alert">
+        No hay facturas registradas para el año seleccionado.
+        </div>
     {% endif %}
     
 </div>
