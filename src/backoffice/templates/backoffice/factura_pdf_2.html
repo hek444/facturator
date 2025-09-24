@@ -181,7 +181,7 @@
         </table>
     </div>
 
-    <p style="clear: both; margin-top: 20px;">Observaciones: 2 {{ factura.observaciones|default:"Sin observaciones." }}</p>
+    <p style="clear: both; margin-top: 20px;">Observaciones: {{ factura.observaciones|default:"Sin observaciones." }}</p>
     <p>Estado: {{ factura.get_estado_display }}</p>
 
     <div class="footer-bancario">
